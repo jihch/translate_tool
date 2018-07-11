@@ -4,6 +4,7 @@ import hashlib
 import random
 import urllib.parse
 import requests
+import re
 import tkinter.messagebox #这个是消息框，对话框的关键
 
 from tkinter import *
@@ -11,6 +12,8 @@ from tkinter.filedialog import askdirectory
 from tkinter.filedialog import askopenfilename
 from concurrent import futures
 from io import StringIO
+from docx import Document
+from docx.shared import Inches
 
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfinterp import process_pdf
@@ -103,12 +106,22 @@ def _main(pdf_path, txt_path):
         zh_txt = excuter.map(translate, data_list)
     # zh_txt = [translate(txt) for txt in data_list]
     zh_txt = list(zh_txt)
-    article = '\n\n\n'.join(zh_txt)
+    #article = '\n\n\n'.join(zh_txt)
     
-    with open(txt_path, 'w', encoding='utf-8') as f:
-        f.write(article)
+    #with open(txt_path, 'w', encoding='utf-8') as f:
+    #    f.write(article)
     # except Exception:
     #     return -1
+    document = Document()
+    for x in zh_txt: 
+        #print(x)
+        x = re.sub(u"[\x00-\x08\x0b-\x0c\x0e-\x1f]+",u"", x)
+        #x = x.replace(/[^\x09\x0A\x0D\x20-\xff\x85\u00A0-\uD7FF\uE000-\uFDCF\uFDF0-\uFFFD]/gm, '')
+        document.add_paragraph(x)
+        #document.add_paragraph(unicode(x, 'utf-8'))
+        
+    document.save(txt_path)
+    
     
 def triggerTranslate():
     
@@ -134,7 +147,7 @@ def triggerTranslate():
     #print(nPos)
     #print (pdfName[mPos+1:nPos])
     coreName = pdfName[mPos:nPos]
-    txt_path = pathName + coreName + ".txt"
+    txt_path = pathName + coreName + "_zh_cn.docx"
     pdfName = pdfName.replace('/','\\')
     txt_path = txt_path.replace('/','\\')
     
@@ -146,27 +159,32 @@ def triggerTranslate():
     #print(1)
     
 def find_last(string,str):
-    last_position=-1
+    last_position = -1
     while True:
-        position=string.find(str,last_position+1)
-        if position==-1:
+        position = string.find(str,last_position+1)
+        if position == -1:
             return last_position
-        last_position=position
+        last_position = position
+        
+
 
 root = Tk()
 root.title("袁海汐的翻译工具")
 path = StringVar()
 pdf = StringVar()
 
-Label(root,text = "pdf路径:").grid(row = 0, column = 0)
+Label(root, text = "pdf路径:").grid(row = 0, column = 0)
 pdfEntry = Entry(root, textvariable = pdf, width=100).grid(row = 0, column = 1)
 Button(root, text = "pdf选择", command = selectPDF).grid(row = 0, column = 2)
 
 
-Label(root,text = "翻译结果文本保存路径:").grid(row = 1, column = 0)
+Label(root, text = "翻译结果文本保存路径:").grid(row = 1, column = 0)
 Entry(root, textvariable = path, width=100).grid(row = 1, column = 1)
 Button(root, text = "路径选择", command = selectPath).grid(row = 1, column = 2)
 
 Button(root, text = "翻译", width=10,command = triggerTranslate).grid(row = 2, column = 1)
 
 root.mainloop()
+
+
+#TODO:进度条、写成PDF吧
