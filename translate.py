@@ -4,6 +4,7 @@ import hashlib
 import random
 import urllib.parse
 import requests
+import tkinter.messagebox #这个是消息框，对话框的关键
 
 from tkinter import *
 from tkinter.filedialog import askdirectory
@@ -33,7 +34,7 @@ def read_from_pdf(file_path):
         return_str = StringIO()
         lap_params = LAParams()
         device = TextConverter(
-            resource_manager, return_str, laparams=lap_params)
+            resource_manager, return_str, laparams = lap_params)
         process_pdf(resource_manager, device, file)
         device.close()
         content = return_str.getvalue()
@@ -57,10 +58,10 @@ def create_url(q, url):
     fro = 'auto'
     to = 'zh'
     salt = random.randint(32768, 65536)
-    appid=20180707000183457
-    key='_Ua8wuHlAvd0X3DoU4x4'
+    appid = 20180707000183457
+    key = '_Ua8wuHlAvd0X3DoU4x4'
     sign = create_sign(q, appid, salt, key)
-    url = url+'?appid='+str(appid)+'&q='+urllib.parse.quote(q)+'&from='+str(fro)+'&to='+str(to)+'&salt='+str(salt)+'&sign='+str(sign)
+    url = url + '?appid=' + str(appid) + '&q=' + urllib.parse.quote(q) + '&from=' + str(fro) + '&to=' + str(to) + '&salt=' + str(salt) + '&sign=' + str(sign)
     return url
 
 
@@ -72,16 +73,26 @@ def translate(q):
     if txt.get('trans_result', -1) == -1:
         print('程序已经出错，请查看报错信息：\n{}'.format(txt))
         return '这一部分翻译错误\n'
-    return txt['trans_result'][0]['dst']
+    
+    trans_result = txt['trans_result'][0]['dst']
+    
+    print('原文:' + q)
+    print('翻译:' + trans_result)
+    
+    content = q + '\n' + trans_result  
+    
+    return content
 
 
 def clean_data(data):
-    '''
-    将输入的data返回成为段落组成的列表
-    '''
-    data = data.replace('\n\n', '闲谈后')
-    data = data.replace('\n', ' ')
-    return data.split('闲谈后')
+    
+    #\n换空格
+    data = data.replace("\n", " ")
+    
+    #句号分组
+    data = data.split('.')
+    
+    return data
 
 
 def _main(pdf_path, txt_path):
@@ -92,28 +103,41 @@ def _main(pdf_path, txt_path):
         zh_txt = excuter.map(translate, data_list)
     # zh_txt = [translate(txt) for txt in data_list]
     zh_txt = list(zh_txt)
-    article = '\n\n'.join(zh_txt)
-    print(article)
+    article = '\n\n\n'.join(zh_txt)
+    
     with open(txt_path, 'w', encoding='utf-8') as f:
         f.write(article)
     # except Exception:
     #     return -1
     
 def triggerTranslate():
-    char_pdf='.pdf'
-    pdfName=pdf.get()
+    
+    #判断有没有选择pdf
+    pdfName = pdf.get()
+    print("pdfName:" + pdfName)
+    
+    if len(pdfName) == 0:
+        tkinter.messagebox.showinfo('提示', '请选择pdf文件')
+        return
+    
+    pathName = path.get()
+    if len(pathName) == 0:
+        tkinter.messagebox.showinfo('提示', '请选择翻译结果保存路径')
+        return
+    
+    char_pdf = '.pdf'
+    
     #print(pdfName)
-    mPos=find_last(pdfName, '/')
+    mPos = find_last(pdfName, '/')
     #print(mPos)
-    nPos=find_last(pdfName, char_pdf)
+    nPos = find_last(pdfName, char_pdf)
     #print(nPos)
     #print (pdfName[mPos+1:nPos])
-    coreName=pdfName[mPos:nPos]
-    txt_path=path.get() + coreName + ".txt"
-    pdfName=pdfName.replace('/','\\')
-    txt_path=txt_path.replace('/','\\')
-    #appid = 20180707000183457    #填入你的 appid ，为int类型
-    #key = '_Ua8wuHlAvd0X3DoU4x4'      #填入你的 key ，为str类型
+    coreName = pdfName[mPos:nPos]
+    txt_path = pathName + coreName + ".txt"
+    pdfName = pdfName.replace('/','\\')
+    txt_path = txt_path.replace('/','\\')
+    
     print(pdfName)
     print(txt_path)
     _main(pdfName, txt_path)
