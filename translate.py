@@ -61,8 +61,8 @@ def create_url(q, url):
     fro = 'auto'
     to = 'zh'
     salt = random.randint(32768, 65536)
-    appid = 20180707000183457
-    key = '_Ua8wuHlAvd0X3DoU4x4'
+    appid = 12345678901234567 #百度翻译开放平台的APP ID
+    key = '_abcdefghijklmnABCDEF' #百度翻译开放平台的密钥 
     sign = create_sign(q, appid, salt, key)
     url = url + '?appid=' + str(appid) + '&q=' + urllib.parse.quote(q) + '&from=' + str(fro) + '&to=' + str(to) + '&salt=' + str(salt) + '&sign=' + str(sign)
     return url
